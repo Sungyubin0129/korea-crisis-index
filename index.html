@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="한국 경제 위기 신호를 한눈에 파악하는 대시보드. 환율, 국고채 금리, 외환보유고, PF 연체율, 외국인 매매 동향을 실시간으로 확인하세요.">
+    <meta name="keywords" content="한국 경제, 경제 위기, 환율, 국고채, PF 연체율, 외환보유고, 경제 지표">
+    <meta property="og:title" content="한국 경제 위기 지수">
+    <meta property="og:description" content="한국 경제 위기 신호를 한눈에 파악하는 대시보드">
+    <meta property="og:type" content="website">
+    
+    <title>한국 경제 위기 지수</title>
+    
+    <!-- Pretendard 폰트 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">
+                    <span class="logo-icon">📊</span>
+                    한국 경제 위기 지수
+                </h1>
+                <p class="subtitle">Korea Economic Crisis Index</p>
+            </div>
+            <div class="update-info">
+                <span class="update-label">최종 업데이트</span>
+                <span class="update-time" id="updateTime">-</span>
+            </div>
+        </header>
+
+        <!-- 종합 위험도 -->
+        <section class="overall-risk-section">
+            <div class="overall-risk-card" id="overallRiskCard">
+                <div class="risk-gauge-container">
+                    <div class="risk-gauge" id="riskGauge">
+                        <svg viewBox="0 0 200 120" class="gauge-svg">
+                            <!-- 배경 아크 -->
+                            <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" />
+                            <!-- 안전 영역 -->
+                            <path class="gauge-safe" d="M 20 100 A 80 80 0 0 1 73 32" />
+                            <!-- 주의 영역 -->
+                            <path class="gauge-warning" d="M 73 32 A 80 80 0 0 1 127 32" />
+                            <!-- 위험 영역 -->
+                            <path class="gauge-danger" d="M 127 32 A 80 80 0 0 1 180 100" />
+                            <!-- 바늘 -->
+                            <line class="gauge-needle" id="gaugeNeedle" x1="100" y1="100" x2="100" y2="30" />
+                            <!-- 중심점 -->
+                            <circle class="gauge-center" cx="100" cy="100" r="8" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="risk-info">
+                    <span class="risk-label">종합 위험도</span>
+                    <span class="risk-status" id="riskStatus">-</span>
+                    <span class="risk-score" id="riskScore">-</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 리액션 섹션 -->
+        <section class="reaction-section">
+            <div class="reaction-card">
+                <h3 class="reaction-title">오늘의 경제 상황, 어떻게 느끼세요?</h3>
+                <div class="reaction-buttons">
+                    <button class="reaction-btn" data-reaction="worried" id="btnWorried">
+                        <span class="reaction-emoji">😰</span>
+                        <span class="reaction-label">불안해요</span>
+                        <span class="reaction-count" id="countWorried">-</span>
+                    </button>
+                    <button class="reaction-btn" data-reaction="neutral" id="btnNeutral">
+                        <span class="reaction-emoji">😐</span>
+                        <span class="reaction-label">보통이에요</span>
+                        <span class="reaction-count" id="countNeutral">-</span>
+                    </button>
+                    <button class="reaction-btn" data-reaction="okay" id="btnOkay">
+                        <span class="reaction-emoji">😊</span>
+                        <span class="reaction-label">괜찮아요</span>
+                        <span class="reaction-count" id="countOkay">-</span>
+                    </button>
+                </div>
+                <p class="reaction-note" id="reactionNote"></p>
+            </div>
+        </section>
+
+        <!-- 지표 그리드 -->
+        <section class="indicators-section">
+            <h2 class="section-title">주요 경제 지표</h2>
+            <div class="indicators-grid" id="indicatorsGrid">
+                <!-- JavaScript로 동적 생성 -->
+            </div>
+        </section>
+
+        <!-- 범례 -->
+        <section class="legend-section">
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-dot safe"></span>
+                    <span>안전</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot warning"></span>
+                    <span>주의</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot danger"></span>
+                    <span>위험</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 투표 섹션 -->
+        <section class="poll-section">
+            <div class="poll-card">
+                <h3 class="poll-title">📊 이번 주 설문</h3>
+                <p class="poll-question" id="pollQuestion">-</p>
+                <div class="poll-options" id="pollOptions">
+                    <!-- JavaScript로 동적 생성 -->
+                </div>
+                <p class="poll-total" id="pollTotal"></p>
+                <p class="poll-note" id="pollNote"></p>
+            </div>
+        </section>
+
+        <!-- 설명 -->
+        <section class="info-section">
+            <div class="info-card">
+                <h3>📌 지표 설명</h3>
+                <ul class="info-list">
+                    <li><strong>환율 (USD/KRW)</strong> - 원화 가치 하락은 외국인 자본 이탈의 신호</li>
+                    <li><strong>국고채 3년 금리</strong> - 급등 시 채권시장 불안 및 자금 경색 우려</li>
+                    <li><strong>가용외환비율</strong> - 즉시 동원 가능한 외환의 비율, 8% 이하 시 위험</li>
+                    <li><strong>GDP 대비 외환보유율</strong> - 국가 외환 방어력의 척도</li>
+                    <li><strong>한미 금리차</strong> - 마이너스 확대 시 자본 유출 압력 증가</li>
+                    <li><strong>PF 연체율</strong> - 부동산 프로젝트 파이낸싱 부실의 척도</li>
+                    <li><strong>외국인 순매도</strong> - 대규모 순매도는 자본 이탈 신호</li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <h3>⚠️ 면책 조항</h3>
+                <p>본 대시보드는 공개된 경제 데이터를 시각화한 것으로, 투자 조언이 아닙니다. 투자 결정은 본인의 판단과 책임 하에 이루어져야 합니다.</p>
+            </div>
+        </section>
+
+        <!-- 푸터 -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p class="footer-text">데이터 출처: 한국은행, 금융감독원, 한국거래소</p>
+                <div class="support-section">
+                    <p>유용하셨다면 커피 한 잔 ☕</p>
+                    <a href="#" class="support-btn" id="supportBtn">후원하기</a>
+                </div>
+            </div>
+            <p class="copyright">© 2025 한국 경제 위기 지수. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="js/env.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
