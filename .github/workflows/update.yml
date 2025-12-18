@@ -1,0 +1,41 @@
+# 한국 경제 위기 지수 - 자동 데이터 업데이트
+name: Update Economic Data
+
+on:
+  # 매일 한국 시간 오전 9시 (UTC 0시) 실행
+  schedule:
+    - cron: '0 0 * * *'
+  
+  # 수동 실행 가능
+  workflow_dispatch:
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+      
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 의존성 설치
+        run: |
+          pip install requests pandas
+      
+      - name: 데이터 수집 스크립트 실행
+        env:
+          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+        run: |
+          python scripts/fetch_data.py
+      
+      - name: 변경사항 커밋 & 푸시
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/indicators.json
+          git diff --staged --quiet || git commit -m "📊 데이터 자동 업데이트 $(date +'%Y-%m-%d %H:%M')"
+          git push
