@@ -42,20 +42,40 @@ def get_ecos_data(stat_code, item_code, start_date, end_date, cycle="D"):
 
 
 def get_exchange_rate():
-    """환율 데이터 (USD/KRW)"""
+    """환율 데이터 (USD/KRW) - 다음 금융 실시간"""
+    today = datetime.now().strftime("%Y%m%d")
+
+    # 1차: 다음 금융 API (실시간)
+    try:
+        url = "https://finance.daum.net/api/exchanges/FRX.KRWUSD"
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Referer": "https://finance.daum.net/"
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
+
+        if "basePrice" in data:
+            return {
+                "value": data["basePrice"],
+                "date": today,
+                "source": "다음금융"
+            }
+    except Exception as e:
+        print(f"다음 금융 오류: {e}")
+
+    # 2차: ECOS API (지연 데이터)
     end_date = datetime.now().strftime("%Y%m%d")
     start_date = (datetime.now() - timedelta(days=7)).strftime("%Y%m%d")
-    
-    # ECOS: 원/달러 환율 (매매기준율)
     result = get_ecos_data("731Y001", "0000001", start_date, end_date, "D")
-    
+
     if result:
         return {
             "value": result["value"],
             "date": result["date"],
             "source": "한국은행"
         }
-    
+
     # 실패시 기본값
     return {"value": 1450.0, "date": end_date, "source": "기본값"}
 
