@@ -125,82 +125,6 @@ def get_us_federal_rate():
     return {"value": 4.5, "date": datetime.now().strftime("%Y-%m-%d")}
 
 
-def get_foreign_net_selling():
-    """외국인 순매도 (코스피 - KRX 데이터)"""
-    try:
-        # 한국거래소 정보데이터시스템 API
-        # 외국인 순매매 추이 조회
-        end_date = datetime.now().strftime("%Y%m%d")
-        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
-
-        url = "http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd"
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-
-        # 투자자별 거래실적 (외국인)
-        payload = {
-            "bld": "dbms/MDC/STAT/standard/MDCSTAT02301",
-            "strtDd": start_date,
-            "endDd": end_date,
-            "inqTpCd": "1",  # 일별
-            "trdVolVal": "2",  # 거래대금
-            "askBid": "3",  # 순매수
-            "share": "1",
-            "money": "1",
-            "csvxls_is498": "false"
-        }
-
-        response = requests.post(url, data=payload, headers=headers, timeout=15)
-        data = response.json()
-
-        if "OutBlock_1" in data and len(data["OutBlock_1"]) > 0:
-            # 월간 합계 계산 (단위: 백만원 -> 조원)
-            total = 0
-            for row in data["OutBlock_1"]:
-                # 외국인 순매수 금액 (FORN_NETBID_AMT)
-                val = row.get("FORN_NETBID_AMT", "0").replace(",", "")
-                if val and val != "-":
-                    total += float(val)
-
-            # 백만원 -> 조원 변환
-            total_trillion = total / 1000000
-
-            return {
-                "value": round(total_trillion, 2),
-                "date": datetime.now().strftime("%Y.%m"),
-                "source": "한국거래소"
-            }
-    except Exception as e:
-        print(f"KRX API 오류: {e}")
-
-    # 실패시 ECOS API로 외국인 증권투자 조회 시도
-    try:
-        end_date = datetime.now().strftime("%Y%m")
-        start_date = (datetime.now() - timedelta(days=60)).strftime("%Y%m")
-
-        result = get_ecos_data("908Y001", "S7A", start_date, end_date, "M")
-        if result:
-            # 억달러 -> 조원 환산 (환율 1400 가정)
-            value_trillion = (result["value"] * 1400) / 10000
-            return {
-                "value": round(value_trillion, 2),
-                "date": result["date"],
-                "source": "한국은행"
-            }
-    except Exception as e:
-        print(f"ECOS 외국인투자 조회 오류: {e}")
-
-    # 최종 실패시 기본값
-    return {
-        "value": -5.0,
-        "date": datetime.now().strftime("%Y.%m"),
-        "source": "기본값",
-        "manual": True
-    }
-
-
 def get_pf_delinquency():
     """PF 연체율 (분기별, 수동 업데이트)"""
     # 금융감독원 보도자료에서 수동 확인 필요
@@ -208,46 +132,6 @@ def get_pf_delinquency():
         "value": 4.49,
         "date": "2025.Q1",
         "source": "금융감독원",
-        "manual": True
-    }
-
-
-def get_available_fx_ratio():
-    """가용외환비율 (자동 계산)"""
-    # IMF 적정 외환보유액 대비 실제 외환보유액 비율
-    # IMF 기준 한국의 적정 외환보유액: 약 6,800억 달러
-
-    try:
-        end_date = datetime.now().strftime("%Y%m")
-        start_date = (datetime.now() - timedelta(days=90)).strftime("%Y%m")
-
-        # 총 외환보유액 조회 (단위: 천달러)
-        total_fx = get_ecos_data("732Y001", "99", start_date, end_date, "M")
-
-        if total_fx:
-            # 천달러 -> 억달러 변환 (1억 = 100,000천)
-            fx_billion = total_fx["value"] / 100000
-
-            # IMF 기준 적정 외환보유액 약 6,800억 달러 (한국 기준)
-            imf_adequate = 6800
-
-            # 가용외환비율 = 실제 외환보유액 / IMF 적정 외환보유액 * 10
-            # 현재 약 4,150억 달러 / 6,800억 달러 * 10 = 약 6.1%
-            available_ratio = (fx_billion / imf_adequate) * 10
-
-            return {
-                "value": round(available_ratio, 1),
-                "date": total_fx["date"],
-                "source": "한국은행(계산)"
-            }
-    except Exception as e:
-        print(f"가용외환비율 계산 오류: {e}")
-
-    # 실패시 기본값
-    return {
-        "value": 6.1,
-        "date": datetime.now().strftime("%Y.%m"),
-        "source": "기본값",
         "manual": True
     }
 
@@ -383,16 +267,6 @@ def fetch_all_indicators():
             "reverse": True,
             "description": "3.5% 이상: 위험"
         },
-        "available_fx_ratio": {
-            "name": "가용외환비율",
-            "unit": "%",
-            "min": 0,
-            "max": 20,
-            "danger_low": 8,
-            "danger_high": 12,
-            "reverse": False,
-            "description": "8% 이하: 위험"
-        },
         "fx_to_gdp_ratio": {
             "name": "GDP 대비 외환보유율",
             "unit": "%",
@@ -422,16 +296,6 @@ def fetch_all_indicators():
             "danger_high": 5,
             "reverse": True,
             "description": "5% 이상: 위험"
-        },
-        "foreign_net_selling": {
-            "name": "외국인 순매도",
-            "unit": "조원",
-            "min": -20,
-            "max": 10,
-            "danger_low": -10,
-            "danger_high": -2,
-            "reverse": False,
-            "description": "-10조 이하: 위험"
         }
     }
     
@@ -439,11 +303,9 @@ def fetch_all_indicators():
     raw_data = {
         "exchange_rate": get_exchange_rate(),
         "bond_rate_3y": get_bond_rate_3y(),
-        "available_fx_ratio": get_available_fx_ratio(),
         "fx_to_gdp_ratio": get_fx_to_gdp_ratio(),
         "korea_us_rate_gap": get_korea_us_rate_gap(),
-        "pf_delinquency": get_pf_delinquency(),
-        "foreign_net_selling": get_foreign_net_selling()
+        "pf_delinquency": get_pf_delinquency()
     }
     
     # 지표 데이터 구성
