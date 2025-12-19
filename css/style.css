@@ -196,12 +196,15 @@ body {
     opacity: 0.8;
 }
 
-.gauge-needle {
+#gaugeNeedle {
+    transform-origin: 100px 100px;
+    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gauge-needle-line {
     stroke: var(--text-primary);
     stroke-width: 4;
     stroke-linecap: round;
-    transform-origin: 100px 100px;
-    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .gauge-center {
