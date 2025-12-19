@@ -353,12 +353,15 @@ def fetch_all_indicators():
     
     # 종합 위험도 계산
     avg_risk = sum(risk_scores) / len(risk_scores)
-    if avg_risk >= 2.5:
-        overall_risk = {"class": "danger", "text": "고위험", "score": avg_risk}
-    elif avg_risk >= 1.8:
-        overall_risk = {"class": "warning", "text": "중간위험", "score": avg_risk}
+    danger_count = risk_scores.count(3)  # 위험 지표 개수
+
+    # 위험 지표가 2개 이상이거나 평균 2.3 이상이면 고위험
+    if danger_count >= 2 or avg_risk >= 2.3:
+        overall_risk = {"class": "danger", "text": "고위험", "score": round(avg_risk, 2)}
+    elif avg_risk >= 1.7:
+        overall_risk = {"class": "warning", "text": "중간위험", "score": round(avg_risk, 2)}
     else:
-        overall_risk = {"class": "safe", "text": "저위험", "score": avg_risk}
+        overall_risk = {"class": "safe", "text": "저위험", "score": round(avg_risk, 2)}
     
     # 최종 데이터
     result = {
