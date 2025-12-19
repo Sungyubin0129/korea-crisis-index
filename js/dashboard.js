@@ -34,9 +34,9 @@ const elements = {
     pollNote: document.getElementById('pollNote')
 };
 
-// 현재 투표 데이터 (로컬 모드용)
-let localReactions = { worried: 127, neutral: 84, okay: 56 };
-let localPollVotes = [45, 25, 18, 8, 4];
+// 현재 투표 데이터 (로컬 모드용 - 초기값 0)
+let localReactions = { worried: 0, neutral: 0, okay: 0 };
+let localPollVotes = [0, 0, 0, 0, 0];
 let pollData = null;
 
 /**
@@ -65,11 +65,17 @@ function formatValue(value, unit) {
 
 /**
  * 게이지 바늘 각도 계산
+ * score: 1 (안전) ~ 3 (위험)
+ * 게이지: 왼쪽(초록, 안전) -> 오른쪽(빨강, 위험)
+ * 각도: -90도 (왼쪽 끝) ~ 90도 (오른쪽 끝)
  */
 function calculateNeedleAngle(score) {
-    const normalized = (score - 1) / 2;
-    const angle = 180 - (normalized * 180);
-    return angle - 90;
+    // score 1 -> -90도 (초록/안전)
+    // score 2 -> 0도 (노랑/중간)
+    // score 3 -> 90도 (빨강/위험)
+    const normalized = (score - 1) / 2; // 0 ~ 1
+    const angle = -90 + (normalized * 180); // -90 ~ 90
+    return angle;
 }
 
 /**
