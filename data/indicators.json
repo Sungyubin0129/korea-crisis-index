@@ -1,10 +1,10 @@
 {
-  "updated_at": "2025-12-19T21:26:05.750652",
-  "updated_date": "2025-12-19 21:26",
+  "updated_at": "2025-12-19T21:40:19.898764",
+  "updated_date": "2025-12-19 21:40",
   "overall_risk": {
     "class": "warning",
     "text": "중간위험",
-    "score": 2.2857142857142856
+    "score": 2.4
   },
   "indicators": {
     "exchange_rate": {
@@ -38,22 +38,6 @@
       "manual": false,
       "risk_class": "warning",
       "risk_text": "주의"
-    },
-    "available_fx_ratio": {
-      "name": "가용외환비율",
-      "unit": "%",
-      "min": 0,
-      "max": 20,
-      "danger_low": 8,
-      "danger_high": 12,
-      "reverse": false,
-      "description": "8% 이하: 위험",
-      "value": 6.2,
-      "date": "202509",
-      "source": "한국은행(계산)",
-      "manual": false,
-      "risk_class": "danger",
-      "risk_text": "위험"
     },
     "fx_to_gdp_ratio": {
       "name": "GDP 대비 외환보유율",
@@ -102,22 +86,6 @@
       "manual": true,
       "risk_class": "warning",
       "risk_text": "주의"
-    },
-    "foreign_net_selling": {
-      "name": "외국인 순매도",
-      "unit": "조원",
-      "min": -20,
-      "max": 10,
-      "danger_low": -10,
-      "danger_high": -2,
-      "reverse": false,
-      "description": "-10조 이하: 위험",
-      "value": -5.0,
-      "date": "2025.12",
-      "source": "기본값",
-      "manual": true,
-      "risk_class": "safe",
-      "risk_text": "안전"
     }
   }
 }
