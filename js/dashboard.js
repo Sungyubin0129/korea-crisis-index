@@ -5,6 +5,45 @@
 // 데이터 파일 경로
 const DATA_URL = 'data/indicators.json';
 
+// 지표 설정 (프론트엔드에서 관리)
+const INDICATOR_CONFIG = {
+    exchange_rate: {
+        name: "환율 (USD/KRW)",
+        unit: "원",
+        min: 1200,
+        max: 1600,
+        description: "1,400원 이상: 위험"
+    },
+    bond_rate_3y: {
+        name: "국고채 3년 금리",
+        unit: "%",
+        min: 1.0,
+        max: 5.0,
+        description: "3.5% 이상: 위험"
+    },
+    fx_to_gdp_ratio: {
+        name: "GDP 대비 외환보유율",
+        unit: "%",
+        min: 10,
+        max: 40,
+        description: "20% 이하: 주의"
+    },
+    korea_us_rate_gap: {
+        name: "한미 금리차",
+        unit: "%p",
+        min: -3.0,
+        max: 2.0,
+        description: "-1%p 이하: 자본유출 압력"
+    },
+    pf_delinquency: {
+        name: "PF 연체율",
+        unit: "%",
+        min: 0,
+        max: 10,
+        description: "5% 이상: 위험"
+    }
+};
+
 // 로컬 스토리지 키
 const STORAGE_KEYS = {
     reaction: 'keci_reaction_voted',
@@ -106,14 +145,16 @@ function calculateBarWidth(value, min, max) {
  * 지표 카드 생성
  */
 function createIndicatorCard(key, indicator) {
-    const {
-        name, unit, value, min, max,
-        risk_class, risk_text, description, date
-    } = indicator;
-    
+    // API 데이터
+    const { value, date, risk_class, risk_text } = indicator;
+
+    // 프론트엔드 설정
+    const config = INDICATOR_CONFIG[key];
+    const { name, unit, min, max, description } = config;
+
     const barWidth = calculateBarWidth(value, min, max);
     const formattedValue = formatValue(value, unit);
-    
+
     return `
         <div class="indicator-card ${risk_class}">
             <div class="indicator-header">
