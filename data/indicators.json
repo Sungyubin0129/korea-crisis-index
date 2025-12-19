@@ -1,6 +1,6 @@
 {
-  "updated_at": "2025-12-19T21:40:19.898764",
-  "updated_date": "2025-12-19 21:40",
+  "updated_at": "2025-12-19T21:56:42.631811",
+  "updated_date": "2025-12-19 21:56",
   "overall_risk": {
     "class": "warning",
     "text": "중간위험",
@@ -16,9 +16,9 @@
       "danger_high": 1400,
       "reverse": true,
       "description": "1,400원 이상: 위험",
-      "value": 1469.5,
-      "date": "20251212",
-      "source": "한국은행",
+      "value": 1479.1,
+      "date": "20251219",
+      "source": "다음금융",
       "manual": false,
       "risk_class": "danger",
       "risk_text": "위험"
