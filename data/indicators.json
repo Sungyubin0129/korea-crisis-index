@@ -1,10 +1,10 @@
 {
-  "updated_at": "2025-12-17T14:30:00",
-  "updated_date": "2025-12-17 14:30",
+  "updated_at": "2025-12-19T21:26:05.750652",
+  "updated_date": "2025-12-19 21:26",
   "overall_risk": {
     "class": "warning",
     "text": "중간위험",
-    "score": 2.14
+    "score": 2.2857142857142856
   },
   "indicators": {
     "exchange_rate": {
@@ -16,8 +16,8 @@
       "danger_high": 1400,
       "reverse": true,
       "description": "1,400원 이상: 위험",
-      "value": 1478,
-      "date": "2025.12.17",
+      "value": 1469.5,
+      "date": "20251212",
       "source": "한국은행",
       "manual": false,
       "risk_class": "danger",
@@ -32,8 +32,8 @@
       "danger_high": 3.5,
       "reverse": true,
       "description": "3.5% 이상: 위험",
-      "value": 2.99,
-      "date": "2025.12.16",
+      "value": 3.093,
+      "date": "20251212",
       "source": "한국은행",
       "manual": false,
       "risk_class": "warning",
@@ -48,10 +48,10 @@
       "danger_high": 12,
       "reverse": false,
       "description": "8% 이하: 위험",
-      "value": 6.1,
-      "date": "2025.11",
-      "source": "수동계산",
-      "manual": true,
+      "value": 6.2,
+      "date": "202509",
+      "source": "한국은행(계산)",
+      "manual": false,
       "risk_class": "danger",
       "risk_text": "위험"
     },
@@ -64,10 +64,10 @@
       "danger_high": 30,
       "reverse": false,
       "description": "20% 이하: 주의",
-      "value": 24.4,
-      "date": "2025.Q3",
-      "source": "계산값",
-      "manual": true,
+      "value": 24.8,
+      "date": "2025.Q4",
+      "source": "한국은행(계산)",
+      "manual": false,
       "risk_class": "warning",
       "risk_text": "주의"
     },
@@ -80,10 +80,10 @@
       "danger_high": 0.5,
       "reverse": false,
       "description": "-1%p 이하: 자본유출 압력",
-      "value": -1.5,
+      "value": -2.0,
       "date": "2025.12",
-      "source": "계산값",
-      "manual": true,
+      "source": "한국은행/FRED(계산)",
+      "manual": false,
       "risk_class": "danger",
       "risk_text": "위험"
     },
@@ -112,23 +112,12 @@
       "danger_high": -2,
       "reverse": false,
       "description": "-10조 이하: 위험",
-      "value": -5.2,
+      "value": -5.0,
       "date": "2025.12",
-      "source": "한국거래소",
+      "source": "기본값",
       "manual": true,
-      "risk_class": "warning",
-      "risk_text": "주의"
+      "risk_class": "safe",
+      "risk_text": "안전"
     }
-  },
-  "poll": {
-    "question": "현재 한국 경제, 가장 우려되는 점은?",
-    "options": [
-      "환율 불안정",
-      "부동산 PF 부실",
-      "가계부채",
-      "수출 감소",
-      "고금리 지속"
-    ],
-    "active": true
   }
 }
