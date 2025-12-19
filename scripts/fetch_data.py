@@ -263,62 +263,8 @@ def calculate_risk_level(indicator_name, value, config):
 
 
 def fetch_all_indicators():
-    """모든 지표 수집"""
-    
-    # 지표 설정
-    configs = {
-        "exchange_rate": {
-            "name": "환율 (USD/KRW)",
-            "unit": "원",
-            "min": 1200,
-            "max": 1600,
-            "danger_low": 1250,
-            "danger_high": 1400,
-            "reverse": True,
-            "description": "1,400원 이상: 위험"
-        },
-        "bond_rate_3y": {
-            "name": "국고채 3년 금리",
-            "unit": "%",
-            "min": 1.0,
-            "max": 5.0,
-            "danger_low": 2.0,
-            "danger_high": 3.5,
-            "reverse": True,
-            "description": "3.5% 이상: 위험"
-        },
-        "fx_to_gdp_ratio": {
-            "name": "GDP 대비 외환보유율",
-            "unit": "%",
-            "min": 10,
-            "max": 40,
-            "danger_low": 20,
-            "danger_high": 30,
-            "reverse": False,
-            "description": "20% 이하: 주의"
-        },
-        "korea_us_rate_gap": {
-            "name": "한미 금리차",
-            "unit": "%p",
-            "min": -3.0,
-            "max": 2.0,
-            "danger_low": -1.0,
-            "danger_high": 0.5,
-            "reverse": False,
-            "description": "-1%p 이하: 자본유출 압력"
-        },
-        "pf_delinquency": {
-            "name": "PF 연체율",
-            "unit": "%",
-            "min": 0,
-            "max": 10,
-            "danger_low": 2,
-            "danger_high": 5,
-            "reverse": True,
-            "description": "5% 이상: 위험"
-        }
-    }
-    
+    """모든 지표 수집 - API 데이터만 저장"""
+
     # 데이터 수집
     raw_data = {
         "exchange_rate": get_exchange_rate(),
@@ -327,42 +273,48 @@ def fetch_all_indicators():
         "korea_us_rate_gap": get_korea_us_rate_gap(),
         "pf_delinquency": get_pf_delinquency()
     }
-    
-    # 지표 데이터 구성
+
+    # 위험도 기준 (config는 프론트엔드에서 관리)
+    risk_configs = {
+        "exchange_rate": {"danger_high": 1400, "danger_low": 1250, "reverse": True},
+        "bond_rate_3y": {"danger_high": 3.5, "danger_low": 2.0, "reverse": True},
+        "fx_to_gdp_ratio": {"danger_high": 30, "danger_low": 20, "reverse": False},
+        "korea_us_rate_gap": {"danger_high": 0.5, "danger_low": -1.0, "reverse": False},
+        "pf_delinquency": {"danger_high": 5, "danger_low": 2, "reverse": True}
+    }
+
+    # 지표 데이터 구성 (API 데이터 + 위험도만)
     indicators = {}
     risk_scores = []
-    
-    for key, config in configs.items():
-        data = raw_data[key]
+
+    for key, data in raw_data.items():
         value = data["value"]
+        config = risk_configs[key]
         risk_class, risk_text = calculate_risk_level(key, value, config)
-        
+
         # 위험도 점수 (안전=1, 주의=2, 위험=3)
         risk_score = {"safe": 1, "warning": 2, "danger": 3}[risk_class]
         risk_scores.append(risk_score)
-        
+
+        # API 데이터만 저장
         indicators[key] = {
-            **config,
             "value": value,
             "date": data["date"],
             "source": data["source"],
-            "manual": data.get("manual", False),
             "risk_class": risk_class,
             "risk_text": risk_text
         }
-    
+
     # 종합 위험도 계산 (순수 평균 기반)
     avg_risk = sum(risk_scores) / len(risk_scores)
 
-    # 평균 점수 기준: 1~3점
-    # 2.5 이상: 고위험, 1.8~2.5: 중간위험, 1.8 미만: 저위험
     if avg_risk >= 2.5:
         overall_risk = {"class": "danger", "text": "고위험", "score": round(avg_risk, 2)}
     elif avg_risk >= 1.8:
         overall_risk = {"class": "warning", "text": "중간위험", "score": round(avg_risk, 2)}
     else:
         overall_risk = {"class": "safe", "text": "저위험", "score": round(avg_risk, 2)}
-    
+
     # 최종 데이터
     result = {
         "updated_at": datetime.now().isoformat(),
@@ -370,7 +322,7 @@ def fetch_all_indicators():
         "overall_risk": overall_risk,
         "indicators": indicators
     }
-    
+
     return result
 
 
@@ -386,29 +338,38 @@ def save_data(data):
 
 def main():
     """메인 실행"""
+    # 지표 이름 (출력용)
+    names = {
+        "exchange_rate": "환율 (USD/KRW)",
+        "bond_rate_3y": "국고채 3년 금리",
+        "fx_to_gdp_ratio": "GDP 대비 외환보유율",
+        "korea_us_rate_gap": "한미 금리차",
+        "pf_delinquency": "PF 연체율"
+    }
+
     print("=" * 50)
     print("한국 경제 위기 지수 - 데이터 수집")
     print("=" * 50)
     print(f"실행 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
-    
+
     # 데이터 수집
     data = fetch_all_indicators()
-    
+
     # 결과 출력
     print(f"종합 위험도: {data['overall_risk']['text']}")
     print("-" * 50)
-    
+
     for key, ind in data["indicators"].items():
         status = {"safe": "[OK]", "warning": "[!!]", "danger": "[XX]"}[ind["risk_class"]]
-        manual = "(수동)" if ind.get("manual") else "(자동)"
-        print(f"{status} {ind['name']}: {ind['value']}{ind['unit']} [{ind['risk_text']}] {manual}")
-    
+        name = names.get(key, key)
+        print(f"{status} {name}: {ind['value']} [{ind['risk_text']}] ({ind['source']})")
+
     print("-" * 50)
-    
+
     # 저장
     save_data(data)
-    
+
     print("\n완료!")
 
 
