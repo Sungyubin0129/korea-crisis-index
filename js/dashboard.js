@@ -83,13 +83,14 @@ function calculateNeedleAngle(score) {
  */
 function updateOverallRisk(overallRisk) {
     const { class: riskClass, text, score } = overallRisk;
-    
+
     elements.overallRiskCard.className = `overall-risk-card ${riskClass}`;
     elements.riskStatus.textContent = text;
     elements.riskStatus.className = `risk-status ${riskClass}`;
     elements.riskScore.textContent = `위험 점수: ${score.toFixed(2)} / 3.0`;
-    
+
     const angle = calculateNeedleAngle(score);
+    console.log(`Score: ${score}, Angle: ${angle}deg`);
     elements.gaugeNeedle.style.transform = `rotate(${angle}deg)`;
 }
 

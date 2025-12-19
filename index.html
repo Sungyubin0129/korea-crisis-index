@@ -52,7 +52,9 @@
                             <!-- 위험 영역 -->
                             <path class="gauge-danger" d="M 127 32 A 80 80 0 0 1 180 100" />
                             <!-- 바늘 -->
-                            <line class="gauge-needle" id="gaugeNeedle" x1="100" y1="100" x2="100" y2="30" />
+                            <g id="gaugeNeedle" style="transform-origin: 100px 100px;">
+                                <line class="gauge-needle-line" x1="100" y1="100" x2="100" y2="30" />
+                            </g>
                             <!-- 중심점 -->
                             <circle class="gauge-center" cx="100" cy="100" r="8" />
                         </svg>
