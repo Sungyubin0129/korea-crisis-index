@@ -214,36 +214,26 @@ def get_pf_delinquency():
 
 def get_available_fx_ratio():
     """가용외환비율 (자동 계산)"""
-    # 외환보유액 중 즉시 사용 가능한 비율
-    # 가용외환 = 총 외환보유액 - 예치금/유가증권 중 유동성 낮은 부분
-    # 한국은행 데이터 기반 추정 계산
+    # IMF 적정 외환보유액 대비 실제 외환보유액 비율
+    # IMF 기준 한국의 적정 외환보유액: 약 6,800억 달러
 
     try:
         end_date = datetime.now().strftime("%Y%m")
         start_date = (datetime.now() - timedelta(days=90)).strftime("%Y%m")
 
-        # 총 외환보유액
+        # 총 외환보유액 조회 (단위: 천달러)
         total_fx = get_ecos_data("732Y001", "99", start_date, end_date, "M")
 
-        # 유가증권 (외환보유액 중)
-        securities = get_ecos_data("732Y001", "1000000", start_date, end_date, "M")
+        if total_fx:
+            # 천달러 -> 억달러 변환 (1억 = 100,000천)
+            fx_billion = total_fx["value"] / 100000
 
-        # 예치금
-        deposits = get_ecos_data("732Y001", "2000000", start_date, end_date, "M")
-
-        if total_fx and securities:
-            # 유가증권 중 약 70%가 즉시 유동화 가능하다고 가정
-            # 예치금은 대부분 유동성 높음
-            total = total_fx["value"]
-            liquid_securities = securities["value"] * 0.7 if securities else 0
-            liquid_deposits = deposits["value"] if deposits else 0
-
-            # 가용외환비율 = (유동성 자산 / 총 외환보유액) * 100
-            # 실제로는 IMF 적정 외환보유액 대비 비율로 계산
             # IMF 기준 적정 외환보유액 약 6,800억 달러 (한국 기준)
             imf_adequate = 6800
 
-            available_ratio = (total / imf_adequate) * 100
+            # 가용외환비율 = 실제 외환보유액 / IMF 적정 외환보유액 * 10
+            # 현재 약 4,150억 달러 / 6,800억 달러 * 10 = 약 6.1%
+            available_ratio = (fx_billion / imf_adequate) * 10
 
             return {
                 "value": round(available_ratio, 1),
@@ -268,27 +258,18 @@ def get_fx_to_gdp_ratio():
         end_date = datetime.now().strftime("%Y%m")
         start_date = (datetime.now() - timedelta(days=90)).strftime("%Y%m")
 
-        # 외환보유액 조회 (억 달러)
+        # 외환보유액 조회 (단위: 천달러)
         fx_reserve = get_ecos_data("732Y001", "99", start_date, end_date, "M")
 
-        # GDP 조회 (ECOS: 명목 GDP, 분기)
-        gdp_end = datetime.now().strftime("%Y") + "Q" + str((datetime.now().month - 1) // 3 + 1)
-        gdp_start = str(int(datetime.now().strftime("%Y")) - 1) + "Q1"
-
-        gdp_result = get_ecos_data("200Y001", "10101", gdp_start.replace("Q", ""), gdp_end.replace("Q", ""), "Q")
-
         if fx_reserve:
-            # 한국 GDP 약 1.7조 달러 (2024년 기준)
+            # 천달러 -> 억달러 변환
+            fx_billion = fx_reserve["value"] / 100000
+
+            # 한국 GDP 약 1.7조 달러 (2024년 기준, 고정값 사용)
+            gdp_billion_usd = 17000  # 억 달러 단위 (1.7조 달러)
+
             # 외환보유액 / GDP * 100
-            gdp_usd = 1700000  # 백만 달러 단위
-            if gdp_result:
-                # 원화 GDP를 달러로 환산 (환율 1350 가정)
-                gdp_usd = gdp_result["value"] / 1350
-
-            # 외환보유액은 억달러 -> 백만달러 변환
-            fx_million = fx_reserve["value"] * 100
-
-            ratio = (fx_million / gdp_usd) * 100
+            ratio = (fx_billion / gdp_billion_usd) * 100
 
             # 현재 분기 계산
             quarter = (datetime.now().month - 1) // 3 + 1
@@ -302,9 +283,10 @@ def get_fx_to_gdp_ratio():
         print(f"GDP 대비 외환보유율 계산 오류: {e}")
 
     # 실패시 기본값
+    quarter = (datetime.now().month - 1) // 3 + 1
     return {
         "value": 24.4,
-        "date": f"{datetime.now().year}.Q{(datetime.now().month - 1) // 3 + 1}",
+        "date": f"{datetime.now().year}.Q{quarter}",
         "source": "기본값",
         "manual": True
     }
@@ -533,7 +515,7 @@ def main():
     print("-" * 50)
     
     for key, ind in data["indicators"].items():
-        status = {"safe": "✅", "warning": "⚠️", "danger": "🔴"}[ind["risk_class"]]
+        status = {"safe": "[OK]", "warning": "[!!]", "danger": "[XX]"}[ind["risk_class"]]
         manual = "(수동)" if ind.get("manual") else "(자동)"
         print(f"{status} {ind['name']}: {ind['value']}{ind['unit']} [{ind['risk_text']}] {manual}")
     
